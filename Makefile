@@ -8,7 +8,7 @@
 #  Author        : $Author$
 #  Created By    : Robert Heller
 #  Created       : Tue Jul 2 08:43:45 2024
-#  Last Modified : <240702.2127>
+#  Last Modified : <240703.1205>
 #
 #  Description	
 #
@@ -43,7 +43,7 @@
 ##############################################################################
 
 
-COBOL=cobc -F -x -g 
+COBOL=cobc -F -x -g --debug -Wall
 
 all: PiggyBank
 

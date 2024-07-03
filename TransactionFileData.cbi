@@ -1,0 +1,5 @@
+    FD TRANS.
+    01 Record.
+       02 TransactionID PICTURE IS X(32).
+       02 AccountNumber PICTURE IS 9(2).
+       02 AmountOfPennies PICTURE IS S9(8).

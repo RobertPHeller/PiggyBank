@@ -1,0 +1,4 @@
+    FD ACC.
+    01 Record.
+       02 AccountName PICTURE IS X(16).
+       02 AccountPennies PICTURE IS S9(8).

@@ -12,20 +12,10 @@ ENVIRONMENT DIVISION.
         FILE STATUS IS TransactionsStatus.
 DATA DIVISION.
   FILE SECTION.
-    FD Accounts.
-    01 Account-Struct.
-       02 AccountName PICTURE IS X(16).
-       02 COMMA-1 PICTURE IS X VALUE IS ",".
-       02 AccountPennies PICTURE IS S9(8).
-       02 SLASH-1 PICTURE IS X VALUE IS "/".
-    FD Transactions.
-    01 Transaction-Struct.
-       02 TransactionID PICTURE IS X(32).
-       02 COMMA-2 PICTURE IS X VALUE IS ",".
-       02 AccountNumber PICTURE IS 9(2).
-       02 COMMA-3 PICTURE IS X VALUE IS ",".
-       02 AmountOfPennies PICTURE IS S9(8).
-       02 SLASH-2 PICTURE IS X  VALUE IS "/".
+    COPY "AccountFileData.cbi" REPLACING ACC BY Accounts 
+                               Record BY Account-Struct.
+    COPY "TransactionFileData.cbi" REPLACING TRANS BY Transactions
+                                             Record BY Transaction-Struct.
   WORKING-STORAGE SECTION.
     01 AccountsStatus PICTURE IS XX.
     01 TransactionsStatus PICTURE IS XX.
@@ -54,7 +44,7 @@ DATA DIVISION.
     01 CurrentBalance PICTURE IS S9(8) VALUE 0.
     01 LastAccountNumber PICTURE IS 9(2) VALUE 0.
     01 Transaction-Entry.
-        02 Pennies PICTURE IS 9(2) VALUE 0.
+        02 Pennies PICTURE IS S9(2) VALUE 0.
         02 TransType PICTURE IS X VALUE "D".
     01 AccountData OCCURS 100 TIMES.
        02 AccountName PICTURE IS X(16) VALUE SPACES.
@@ -81,7 +71,8 @@ DATA DIVISION.
                     PICTURE IS X(16) FROM CurrentAccountName.    
        02 VALUE "Current Balance: "                 LINE 5 COL 10.
        02 Account-Balance                           LINE 5 COL 27
-                    PICTURE IS $ZZ,ZZZ,ZZ9DB FROM CurrentBalance.   
+                    PICTURE IS ZZ,ZZZ,ZZ9DB FROM CurrentBalance.
+       02 VALUE "Pennies"                           LINE 5 COL 40.   
        02 VALUE "Type (D for Deposit, W for Withdrawal): " LINE 7 COL 10.
        02   Type-Input                              LINE 7 COL 50
                             PICTURE IS X TO TransType IN Transaction-Entry.
@@ -122,9 +113,9 @@ P200-ReadAccounts.
         EXIT PERFORM
       END-IF
       DISPLAY "*** Account-Record is " Account-Record UPON STDERR
-      MOVE CORRESPONDING Account-Record TO AccountData(LastAccountNumber)
+      MOVE CORRESPONDING Account-Record TO AccountData(1+LastAccountNumber)
       DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
-      DISPLAY "*** AccountData(LastAccountNumber) is " AccountData(LastAccountNumber) UPON STDERR
+      DISPLAY "*** AccountData(1+LastAccountNumber) is " AccountData(1+LastAccountNumber) UPON STDERR
       ADD 1 TO LastAccountNumber
     END-PERFORM
     CLOSE Accounts.
@@ -156,23 +147,26 @@ P400-MainScreen.
       PERFORM WITH TEST BEFORE 
             VARYING CurrentAccountNumber FROM 0 UNTIL CurrentAccountNumber = LastAccountNumber
         DISPLAY "*** CurrentAccountNumber is " CurrentAccountNumber UPON STDERR
-        IF AccountData(CurrentAccountNumber) = CurrentAccountName
-          MOVE AccountPennies IN AccountData(CurrentAccountNumber) TO CurrentBalance
-          PERFORM P500-TransactionScreen UNTIL TransactionAnswer = 'Q'
-          EXIT PERFORM
+        IF AccountName IN AccountData(1+CurrentAccountNumber) = CurrentAccountName
+          DISPLAY "*** Using existing account (#" CurrentAccountNumber ") for " CurrentAccountName UPON STDERR
+          MOVE AccountPennies IN AccountData(1+CurrentAccountNumber) TO CurrentBalance
+          PERFORM P500-TransactionScreen UNTIL FUNCTION UPPER-CASE(TransactionAnswer) = 'Q'
+          PERFORM P600-ReWriteAccounts
+          EXIT PARAGRAPH
         END-IF
       END-PERFORM
       DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
       IF CurrentAccountNumber = LastAccountNumber
-        MOVE SPACES TO AccountName IN AccountData(CurrentAccountNumber)
-        MOVE 0 TO AccountPennies IN AccountData(CurrentAccountNumber)
-        DISPLAY "*** [Before] AccountData(" CurrentAccountNumber ") is '" AccountData(CurrentAccountNumber) "'" UPON STDERR
-        MOVE CurrentAccountName TO AccountName IN AccountData(CurrentAccountNumber)
+        DISPLAY "*** Creating new account for " CurrentAccountName UPON STDERR
+        MOVE SPACES TO AccountName IN AccountData(1+CurrentAccountNumber)
+        MOVE 0 TO AccountPennies IN AccountData(1+CurrentAccountNumber)
+        DISPLAY "*** [Before] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
+        MOVE CurrentAccountName TO AccountName IN AccountData(1+CurrentAccountNumber)
         MOVE 0 TO CurrentBalance
         ADD 1 TO LastAccountNumber
         DISPLAY "*** CurrentAccountName is '" CurrentAccountName "'" UPON STDERR
         DISPLAY "*** CurrentBalance is " CurrentBalance UPON STDERR
-        DISPLAY "*** [After] AccountData(" CurrentAccountNumber ") is '" AccountData(CurrentAccountNumber) "'" UPON STDERR
+        DISPLAY "*** [After] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
         PERFORM P500-TransactionScreen UNTIL FUNCTION UPPER-CASE(TransactionAnswer) = 'Q'
       END-IF
     END-IF
@@ -195,17 +189,16 @@ P500-TransactionScreen.
       MOVE Now TO TransactionID IN Transaction-Record
       MOVE CurrentAccountNumber TO AccountNumber IN Transaction-Record
       IF  FUNCTION UPPER-CASE(TransType) = 'D'
-        COMPUTE CurrentBalance = CurrentBalance + Pennies
+        ADD Pennies TO CurrentBalance
         MOVE Pennies TO AmountOfPennies IN Transaction-Record
       ELSE
-        COMPUTE CurrentBalance = CurrentBalance - Pennies
-        COMPUTE AmountOfPennies IN Transaction-Record = -Pennies
+        SUBTRACT Pennies FROM CurrentBalance
+        MOVE 0 TO AmountOfPennies IN Transaction-Record
+        SUBTRACT Pennies FROM AmountOfPennies IN Transaction-Record
       END-IF
-      MOVE CurrentBalance TO AccountPennies IN AccountData(CurrentAccountNumber)
+      DISPLAY "*** Transaction-Record is " Transaction-Record UPON STDERR
+      MOVE CurrentBalance TO AccountPennies IN AccountData(1+CurrentAccountNumber)
       MOVE CORRESPONDING Transaction-Record TO Transaction-Struct
-      MOVE "," TO COMMA-2 IN Transaction-Struct
-      MOVE "," TO COMMA-3 IN Transaction-Struct
-      MOVE "/" TO SLASH-2 IN Transaction-Struct
       WRITE Transaction-Struct
     END-IF.
     
@@ -216,10 +209,8 @@ P600-ReWriteAccounts.
     OPEN OUTPUT Accounts
     PERFORM VARYING CurrentAccountNumber FROM 0 UNTIL CurrentAccountNumber = LastAccountNumber
         DISPLAY "*** CurrentAccountNumber = " CurrentAccountNumber UPON STDERR
-        DISPLAY "*** AccountData(CurrentAccountNumber) is " AccountData(CurrentAccountNumber) UPON STDERR
-        MOVE CORRESPONDING AccountData(CurrentAccountNumber) TO Account-Struct
-        MOVE "," TO COMMA-1 IN Account-Struct
-        MOVE "/" TO SLASH-1 IN Account-Struct
+        DISPLAY "*** AccountData(1+CurrentAccountNumber) is " AccountData(1+CurrentAccountNumber) UPON STDERR
+        MOVE CORRESPONDING AccountData(1+CurrentAccountNumber) TO Account-Struct
         DISPLAY "*** Account-Struct '" Account-Struct "'" UPON STDERR
         WRITE Account-Struct
     END-PERFORM.
