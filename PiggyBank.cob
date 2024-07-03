@@ -15,12 +15,17 @@ DATA DIVISION.
     FD Accounts.
     01 Account-Struct.
        02 AccountName PICTURE IS X(16).
+       02 COMMA-1 PICTURE IS X VALUE IS ",".
        02 AccountPennies PICTURE IS S9(8).
+       02 SLASH-1 PICTURE IS X VALUE IS "/".
     FD Transactions.
     01 Transaction-Struct.
        02 TransactionID PICTURE IS X(32).
+       02 COMMA-2 PICTURE IS X VALUE IS ",".
        02 AccountNumber PICTURE IS 9(2).
+       02 COMMA-3 PICTURE IS X VALUE IS ",".
        02 AmountOfPennies PICTURE IS S9(8).
+       02 SLASH-2 PICTURE IS X  VALUE IS "/".
   WORKING-STORAGE SECTION.
     01 AccountsStatus PICTURE IS XX.
     01 TransactionsStatus PICTURE IS XX.
@@ -49,16 +54,18 @@ DATA DIVISION.
     01 CurrentBalance PICTURE IS S9(8) VALUE 0.
     01 LastAccountNumber PICTURE IS 9(2) VALUE 0.
     01 Transaction-Entry.
-        02 Pennies PICTURE IS 9(5) VALUE 0.
+        02 Pennies PICTURE IS 9(2) VALUE 0.
         02 TransType PICTURE IS X VALUE "D".
     01 AccountData OCCURS 100 TIMES.
        02 AccountName PICTURE IS X(16) VALUE SPACES.
        02 AccountPennies PICTURE IS S9(8) VALUE 0.
   SCREEN SECTION.
     01 Account-Login-Screen.
-       02 VALUE "Account Login Screen" BLANK SCREEN  LINE 1 COL 35.
-       02 VALUE "Account Name: "                     LINE 3 COL 10.
-       02   Name-Input                               LINE 3 COL 25
+       02 VALUE "PIGGY BANK, Your Bank under your bed!" 
+                        BLANK SCREEN                 LINE 1 COL 5.
+       02 VALUE "Account Login Screen"               LINE 6 COL 35.
+       02 VALUE "Account Name: "                     LINE 8 COL 10.
+       02   Name-Input                               LINE 8 COL 25
                         PICTURE IS X(16) TO CurrentAccountName.
        02 VALUE "C - TO CONTINUE"                    LINE 11 COL 30.
        02 VALUE "Q - TO QUIT"                        LINE 12 COL 30.
@@ -66,12 +73,14 @@ DATA DIVISION.
        02 RESPONSE-INPUT                             LINE 14 COL 45
                             PICTURE IS X TO MainAnswer.
     01 Transaction-Screen.       
-       02 VALUE "Transaction Screen" BLANK SCREEN  LINE 1 COL 35.
-       02 VALUE "Account Name: "                    LINE 3 COL 10.
-       02 Account-Name                              LINE 3 COL 25
+       02 VALUE "PIGGY BANK, Your Bank under your bed!" 
+                                      BLANK SCREEN  LINE 1 COL 5.
+       02 VALUE "Transaction Screen"                LINE 3 COL 35.
+       02 VALUE "Account Name: "                    LINE 4 COL 10.
+       02 Account-Name                              LINE 4 COL 25
                     PICTURE IS X(16) FROM CurrentAccountName.    
-       02 VALUE "Current Balance: "                 LINE 4 COL 10.
-       02 Account-Balance                           LINE 4 COL 27
+       02 VALUE "Current Balance: "                 LINE 5 COL 10.
+       02 Account-Balance                           LINE 5 COL 27
                     PICTURE IS $ZZ,ZZZ,ZZ9DB FROM CurrentBalance.   
        02 VALUE "Type (D for Deposit, W for Withdrawal): " LINE 7 COL 10.
        02   Type-Input                              LINE 7 COL 50
@@ -137,8 +146,12 @@ P400-MainScreen.
     DISPLAY "*** P400-MainScreen" UPON STDERR
     MOVE SPACES TO CurrentAccountName
     MOVE " " TO MainAnswer
+    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
+    MOVE SPACES TO Name-Input IN Account-Login-Screen
+    MOVE " " TO RESPONSE-INPUT  IN Account-Login-Screen
     DISPLAY Account-Login-Screen
     ACCEPT Account-Login-Screen
+    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
     IF FUNCTION UPPER-CASE(MainAnswer) = "C"
       PERFORM WITH TEST BEFORE 
             VARYING CurrentAccountNumber FROM 0 UNTIL CurrentAccountNumber = LastAccountNumber
@@ -151,9 +164,15 @@ P400-MainScreen.
       END-PERFORM
       DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
       IF CurrentAccountNumber = LastAccountNumber
+        MOVE SPACES TO AccountName IN AccountData(CurrentAccountNumber)
+        MOVE 0 TO AccountPennies IN AccountData(CurrentAccountNumber)
+        DISPLAY "*** [Before] AccountData(" CurrentAccountNumber ") is '" AccountData(CurrentAccountNumber) "'" UPON STDERR
         MOVE CurrentAccountName TO AccountName IN AccountData(CurrentAccountNumber)
         MOVE 0 TO CurrentBalance
         ADD 1 TO LastAccountNumber
+        DISPLAY "*** CurrentAccountName is '" CurrentAccountName "'" UPON STDERR
+        DISPLAY "*** CurrentBalance is " CurrentBalance UPON STDERR
+        DISPLAY "*** [After] AccountData(" CurrentAccountNumber ") is '" AccountData(CurrentAccountNumber) "'" UPON STDERR
         PERFORM P500-TransactionScreen UNTIL FUNCTION UPPER-CASE(TransactionAnswer) = 'Q'
       END-IF
     END-IF
@@ -166,6 +185,9 @@ P500-TransactionScreen.
     MOVE 0 TO Pennies
     MOVE " " TO TransType
     MOVE " " TO TransactionAnswer
+    MOVE " " TO Type-Input IN Transaction-Screen
+    MOVE 0 TO Pennies-Input IN Transaction-Screen
+    MOVE " " TO RESPONSE-INPUT IN Transaction-Screen
     DISPLAY Transaction-Screen
     ACCEPT Transaction-Screen
     IF  FUNCTION UPPER-CASE(TransactionAnswer) = 'C'
@@ -181,6 +203,9 @@ P500-TransactionScreen.
       END-IF
       MOVE CurrentBalance TO AccountPennies IN AccountData(CurrentAccountNumber)
       MOVE CORRESPONDING Transaction-Record TO Transaction-Struct
+      MOVE "," TO COMMA-2 IN Transaction-Struct
+      MOVE "," TO COMMA-3 IN Transaction-Struct
+      MOVE "/" TO SLASH-2 IN Transaction-Struct
       WRITE Transaction-Struct
     END-IF.
     
@@ -193,6 +218,9 @@ P600-ReWriteAccounts.
         DISPLAY "*** CurrentAccountNumber = " CurrentAccountNumber UPON STDERR
         DISPLAY "*** AccountData(CurrentAccountNumber) is " AccountData(CurrentAccountNumber) UPON STDERR
         MOVE CORRESPONDING AccountData(CurrentAccountNumber) TO Account-Struct
+        MOVE "," TO COMMA-1 IN Account-Struct
+        MOVE "/" TO SLASH-1 IN Account-Struct
+        DISPLAY "*** Account-Struct '" Account-Struct "'" UPON STDERR
         WRITE Account-Struct
     END-PERFORM.
     CLOSE Accounts.
