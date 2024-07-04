@@ -8,7 +8,7 @@
 #  Author        : $Author$
 #  Created By    : Robert Heller
 #  Created       : Tue Jul 2 08:43:45 2024
-#  Last Modified : <240703.1205>
+#  Last Modified : <240704.1259>
 #
 #  Description	
 #
@@ -45,7 +45,12 @@
 
 COBOL=cobc -F -x -g --debug -Wall
 
-all: PiggyBank
+all: PiggyBank TransReport
 
-PiggyBank: PiggyBank.cob
-	$(COBOL) -o PiggyBank PiggyBank.cob
+%: %.cob
+	$(COBOL) -o $@ $<
+
+PiggyBank: PiggyBank.cob AccountFileData.cbi TransactionFileData.cbi
+
+TransReport: TransReport.cob AccountFileData.cbi TransactionFileData.cbi
+

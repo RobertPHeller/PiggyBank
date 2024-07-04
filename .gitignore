@@ -1,0 +1,14 @@
+*~
+*.dat
+*#
+*.txt
+*.pdf
+*.c
+*.c.h
+*.c.l.h
+*.i
+LOG
+log
+
+PiggyBank
+TransReport

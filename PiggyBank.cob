@@ -92,7 +92,7 @@ PROCEDURE DIVISION.
     STOP Run.
 P100-OpenAccounts.
 
-    DISPLAY "*** P100-OpenAccounts"  UPON STDERR
+>>D    DISPLAY "*** P100-OpenAccounts"  UPON STDERR
     OPEN INPUT Accounts
     IF AccountsStatus NOT = '00'
        OPEN OUTPUT Accounts
@@ -106,23 +106,23 @@ P100-OpenAccounts.
 
 P200-ReadAccounts.
 
-    DISPLAY "*** P200-ReadAccounts" UPON STDERR
+>>D    DISPLAY "*** P200-ReadAccounts" UPON STDERR
     PERFORM WITH TEST BEFORE UNTIL AccountsStatus = '10'
       READ Accounts RECORD INTO Account-Record
       IF AccountsStatus = '10'
         EXIT PERFORM
       END-IF
-      DISPLAY "*** Account-Record is " Account-Record UPON STDERR
+>>D      DISPLAY "*** Account-Record is " Account-Record UPON STDERR
       MOVE CORRESPONDING Account-Record TO AccountData(1+LastAccountNumber)
-      DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
-      DISPLAY "*** AccountData(1+LastAccountNumber) is " AccountData(1+LastAccountNumber) UPON STDERR
+>>D      DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
+>>D      DISPLAY "*** AccountData(1+LastAccountNumber) is " AccountData(1+LastAccountNumber) UPON STDERR
       ADD 1 TO LastAccountNumber
     END-PERFORM
     CLOSE Accounts.
     
 P300-OpenTransactions.
 
-    DISPLAY "*** P300-OpenTransactions" UPON STDERR
+>>D    DISPLAY "*** P300-OpenTransactions" UPON STDERR
     OPEN EXTEND Transactions
     IF TransactionsStatus NOT = '00'
       OPEN  OUTPUT Transactions
@@ -134,39 +134,39 @@ P300-OpenTransactions.
     
 P400-MainScreen.
 
-    DISPLAY "*** P400-MainScreen" UPON STDERR
+>>D    DISPLAY "*** P400-MainScreen" UPON STDERR
     MOVE SPACES TO CurrentAccountName
     MOVE " " TO MainAnswer
-    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
+>>D    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
     MOVE SPACES TO Name-Input IN Account-Login-Screen
     MOVE " " TO RESPONSE-INPUT  IN Account-Login-Screen
     DISPLAY Account-Login-Screen
     ACCEPT Account-Login-Screen
-    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
+>>D    DISPLAY "*** CurrentAccountName: '" CurrentAccountName "'" UPON STDERR 
     IF FUNCTION UPPER-CASE(MainAnswer) = "C"
       PERFORM WITH TEST BEFORE 
             VARYING CurrentAccountNumber FROM 0 UNTIL CurrentAccountNumber = LastAccountNumber
-        DISPLAY "*** CurrentAccountNumber is " CurrentAccountNumber UPON STDERR
+>>D        DISPLAY "*** CurrentAccountNumber is " CurrentAccountNumber UPON STDERR
         IF AccountName IN AccountData(1+CurrentAccountNumber) = CurrentAccountName
-          DISPLAY "*** Using existing account (#" CurrentAccountNumber ") for " CurrentAccountName UPON STDERR
+>>D          DISPLAY "*** Using existing account (#" CurrentAccountNumber ") for " CurrentAccountName UPON STDERR
           MOVE AccountPennies IN AccountData(1+CurrentAccountNumber) TO CurrentBalance
           PERFORM P500-TransactionScreen UNTIL FUNCTION UPPER-CASE(TransactionAnswer) = 'Q'
           PERFORM P600-ReWriteAccounts
           EXIT PARAGRAPH
         END-IF
       END-PERFORM
-      DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
+>>D      DISPLAY "*** LastAccountNumber is " LastAccountNumber UPON STDERR
       IF CurrentAccountNumber = LastAccountNumber
-        DISPLAY "*** Creating new account for " CurrentAccountName UPON STDERR
+>>D        DISPLAY "*** Creating new account for " CurrentAccountName UPON STDERR
         MOVE SPACES TO AccountName IN AccountData(1+CurrentAccountNumber)
         MOVE 0 TO AccountPennies IN AccountData(1+CurrentAccountNumber)
-        DISPLAY "*** [Before] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
+>>D        DISPLAY "*** [Before] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
         MOVE CurrentAccountName TO AccountName IN AccountData(1+CurrentAccountNumber)
         MOVE 0 TO CurrentBalance
         ADD 1 TO LastAccountNumber
-        DISPLAY "*** CurrentAccountName is '" CurrentAccountName "'" UPON STDERR
-        DISPLAY "*** CurrentBalance is " CurrentBalance UPON STDERR
-        DISPLAY "*** [After] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
+>>D        DISPLAY "*** CurrentAccountName is '" CurrentAccountName "'" UPON STDERR
+>>D        DISPLAY "*** CurrentBalance is " CurrentBalance UPON STDERR
+>>D        DISPLAY "*** [After] AccountData(1+" CurrentAccountNumber ") is '" AccountData(1+CurrentAccountNumber) "'" UPON STDERR
         PERFORM P500-TransactionScreen UNTIL FUNCTION UPPER-CASE(TransactionAnswer) = 'Q'
       END-IF
     END-IF
@@ -174,7 +174,7 @@ P400-MainScreen.
     
 P500-TransactionScreen.
 
-    DISPLAY "*** P500-TransactionScreen" UPON STDERR
+>>D    DISPLAY "*** P500-TransactionScreen" UPON STDERR
     
     MOVE 0 TO Pennies
     MOVE " " TO TransType
@@ -196,7 +196,7 @@ P500-TransactionScreen.
         MOVE 0 TO AmountOfPennies IN Transaction-Record
         SUBTRACT Pennies FROM AmountOfPennies IN Transaction-Record
       END-IF
-      DISPLAY "*** Transaction-Record is " Transaction-Record UPON STDERR
+>>D      DISPLAY "*** Transaction-Record is " Transaction-Record UPON STDERR
       MOVE CurrentBalance TO AccountPennies IN AccountData(1+CurrentAccountNumber)
       MOVE CORRESPONDING Transaction-Record TO Transaction-Struct
       WRITE Transaction-Struct
@@ -204,16 +204,16 @@ P500-TransactionScreen.
     
 P600-ReWriteAccounts.
 
-    DISPLAY "*** P600-ReWriteAccounts" UPON STDERR
+>>D    DISPLAY "*** P600-ReWriteAccounts" UPON STDERR
     CLOSE Transactions
     OPEN OUTPUT Accounts
     PERFORM VARYING CurrentAccountNumber FROM 0 UNTIL CurrentAccountNumber = LastAccountNumber
-        DISPLAY "*** CurrentAccountNumber = " CurrentAccountNumber UPON STDERR
-        DISPLAY "*** AccountData(1+CurrentAccountNumber) is " AccountData(1+CurrentAccountNumber) UPON STDERR
+>>D        DISPLAY "*** CurrentAccountNumber = " CurrentAccountNumber UPON STDERR
+>>D        DISPLAY "*** AccountData(1+CurrentAccountNumber) is " AccountData(1+CurrentAccountNumber) UPON STDERR
         MOVE CORRESPONDING AccountData(1+CurrentAccountNumber) TO Account-Struct
-        DISPLAY "*** Account-Struct '" Account-Struct "'" UPON STDERR
+>>D        DISPLAY "*** Account-Struct '" Account-Struct "'" UPON STDERR
         WRITE Account-Struct
     END-PERFORM.
     CLOSE Accounts.
-    
+.    
 END PROGRAM PiggyBank.
