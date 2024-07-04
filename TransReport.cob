@@ -55,6 +55,7 @@ DATA DIVISION.
         
     01 Flags.
         02 F-EOF   PIC X(1).
+        02 Account-Head-Flag PIC X(1).
         
     01 One-Const   PIC 9 VALUE 1.
     
@@ -78,7 +79,7 @@ DATA DIVISION.
             10 COL 60 VALUE 'Page:'.
             10 COL 65 SOURCE PAGE-COUNTER PIC ZZ9.
       
-    01 TYPE IS CONTROL HEADING F-AccountNumber.
+    01 Head-Account TYPE IS CONTROL HEADING F-AccountNumber.
         05 LINE NUMBER PLUS 1.
            10 COL 5 VALUE 'Account #:'.
            10 COL 15 SOURCE F-AccountNumber PIC 99.
@@ -136,7 +137,7 @@ PROCEDURE DIVISION.
   USE BEFORE REPORTING End-Account.
   1. COMPUTE Total-Bank-Balance = Total-Bank-Balance + Running-Account-Balance
      ADD 1 TO Account-Count
-     MOVE 0 TO Running-Account-Balance
+     MOVE 'R' TO Account-Head-Flag
   .
   END DECLARATIVES.
   010-Main SECTION.
@@ -172,6 +173,10 @@ PROCEDURE DIVISION.
         MOVE 'Y' TO F-EOF
       END-RETURN
       PERFORM UNTIL F-EOF = 'Y'
+        IF Account-Head-Flag = 'R'
+            MOVE 0 TO Running-Account-Balance
+            MOVE ' ' TO Account-Head-Flag
+        END-IF
         MOVE AccountName IN AccountData(1+F-AccountNumber) TO F-AccountName
         ADD F-AmountOfPennies TO Running-Account-Balance
         ADD 1 TO Transaction-Count
