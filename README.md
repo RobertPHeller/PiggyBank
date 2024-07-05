@@ -1,5 +1,5 @@
 # PiggyBank
-Simple COBOL programs implementing a simple children's bank.
+Simple COBOL programs implementing a simple children's piggy bank.
 
 There are three programs:
 
