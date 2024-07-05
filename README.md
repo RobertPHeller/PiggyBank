@@ -1,10 +1,11 @@
 # PiggyBank
 Simple COBOL programs implementing a simple children's bank.
 
-There are two programs:
+There are three programs:
 
 1. PiggyBank - This is a bank teller interface.
 1. TransReport - This is a transaction report generating program.
+1. AccountReport - This is an account report generating program.
 
 Two datafiles are used:
 
