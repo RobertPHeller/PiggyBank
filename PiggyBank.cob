@@ -8,7 +8,7 @@
 *>  Author        : $Author$
 *>  Created By    : Robert Heller
 *>  Created       : Fri Jul 5 11:07:21 2024
-*>  Last Modified : <240705.1108>
+*>  Last Modified : <240705.1113>
 *>
 *>  Description
 *>
@@ -257,5 +257,5 @@ P600-ReWriteAccounts.
         WRITE Account-Struct
     END-PERFORM.
     CLOSE Accounts.
-.    
+    
 END PROGRAM PiggyBank.
