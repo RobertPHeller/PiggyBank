@@ -8,7 +8,7 @@
 *>  Author        : $Author$
 *>  Created By    : Robert Heller
 *>  Created       : Fri Jul 5 11:07:21 2024
-*>  Last Modified : <240713.1309>
+*>  Last Modified : <240713.1433>
 *>
 *>  Description
 *>
@@ -306,7 +306,7 @@ P600-ReWriteAccounts.
         MOVE CORRESPONDING AccountData(1+CurrentAccountNumber) TO Account-Struct
 >>D        DISPLAY "*** Account-Struct '" Account-Struct "'" UPON STDERR
         WRITE Account-Struct
-    END-PERFORM.
+    END-PERFORM
     CLOSE Accounts.
     
 END PROGRAM PiggyBank.
