@@ -8,7 +8,7 @@
 *>  Author        : $Author$
 *>  Created By    : Robert Heller
 *>  Created       : Fri Jul 5 11:11:12 2024
-*>  Last Modified : <240705.1111>
+*>  Last Modified : <240713.1712>
 *>
 *>  Description
 *>
@@ -109,16 +109,16 @@ DATA DIVISION.
   REPORT SECTION.
     RD Transaction-Report
         CONTROLS ARE FINAL F-AccountNumber
-        PAGE LIMITS ARE 63 LINES 80 COLUMNS
+        PAGE LIMITS ARE 59 LINES 132 COLUMNS
              HEADING 1
              FIRST DETAIL 5
-             LAST  DETAIL 63.
+             LAST  DETAIL 59.
     01 TYPE IS PAGE HEADING.
         05 LINE NUMBER PLUS 1.
             10 COL 1 SOURCE TodaysDate PIC 9999/99/99.
             10 COL 20 VALUE 'Piggy Bank Transaction Report'.
-            10 COL 60 VALUE 'Page:'.
-            10 COL 65 SOURCE PAGE-COUNTER PIC ZZ9.
+            10 COL 120 VALUE 'Page:'.
+            10 COL 125 SOURCE PAGE-COUNTER PIC ZZ9.
       
     01 Head-Account TYPE IS CONTROL HEADING F-AccountNumber.
         05 LINE NUMBER PLUS 1.
@@ -229,7 +229,7 @@ PROCEDURE DIVISION.
       END-PERFORM
       TERMINATE Transaction-Report
       CLOSE Report-File
-      CALL "SYSTEM" USING "a2ps -q -1 -B --borders=no -o - /tmp/report.txt| ps2pdf - report.pdf"
+      CALL "SYSTEM" USING "a2ps -q -1 -B --borders=no --underlay=test --landscape --lines-per-page=66 --chars-per-line=132 --prolog=greenbar -o - /tmp/report.txt| ps2pdf - report.pdf"
       .
     
   P100-OpenAccounts.
