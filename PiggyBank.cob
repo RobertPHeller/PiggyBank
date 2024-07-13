@@ -8,7 +8,7 @@
 *>  Author        : $Author$
 *>  Created By    : Robert Heller
 *>  Created       : Fri Jul 5 11:07:21 2024
-*>  Last Modified : <240705.1113>
+*>  Last Modified : <240713.1309>
 *>
 *>  Description
 *>
@@ -45,9 +45,15 @@ IDENTIFICATION DIVISION.
 ENVIRONMENT DIVISION.
   INPUT-OUTPUT SECTION.
     FILE-CONTROL.
+*>***************************************************************************
+*> Accounts File
+*>***************************************************************************
       SELECT Accounts ASSIGN TO 'Accounts.dat' 
         ORGANISATION IS RECORD BINARY SEQUENTIAL
         FILE STATUS IS AccountsStatus.
+*>***************************************************************************
+*> Transaction Journal File
+*>***************************************************************************
       SELECT Transactions ASSIGN TO 'Transactions.dat'
         ORGANISATION IS RECORD BINARY SEQUENTIAL
         ACCESS MODE IS SEQUENTIAL 
@@ -59,8 +65,14 @@ DATA DIVISION.
     COPY "TransactionFileData.cbi" REPLACING TRANS BY Transactions
                                              Record BY Transaction-Struct.
   WORKING-STORAGE SECTION.
+*>***************************************************************************
+*> File status
+*>***************************************************************************
     01 AccountsStatus PICTURE IS XX.
     01 TransactionsStatus PICTURE IS XX.
+*>***************************************************************************
+*> In memory file records
+*>***************************************************************************
     01 Account-Record.
        02 AccountName PICTURE IS X(16) VALUE SPACES.
        02 AccountPennies PICTURE IS S9(8) VALUE 0.
@@ -68,6 +80,9 @@ DATA DIVISION.
        02 TransactionID PICTURE IS X(32) VALUE SPACES.
        02 AccountNumber PICTURE IS 9(2) VALUE 0.
        02 AmountOfPennies PICTURE IS S9(8) VALUE 0.
+*>***************************************************************************
+*> Time stamp for transactions
+*>***************************************************************************
     01 Now.
         05 CDT-Year               PIC 9(4).
         05 CDT-Month              PIC 9(2). *> 01-12
@@ -79,6 +94,9 @@ DATA DIVISION.
         05 CDT-GMT-Diff-Hours     PIC S9(2)
                                   SIGN LEADING SEPARATE.
         05 CDT-GMT-Diff-Minutes   PIC 9(2). *> 00 or 30
+*>***************************************************************************
+*> Working variables 
+*>***************************************************************************
     01 MainAnswer PICTURE IS X VALUE "C".
     01 TransactionAnswer PICTURE IS X VALUE "C".
     01 CurrentAccountName PICTURE IS X(16) VALUE SPACES.
@@ -88,10 +106,16 @@ DATA DIVISION.
     01 Transaction-Entry.
         02 Pennies PICTURE IS S9(2) VALUE 0.
         02 TransType PICTURE IS X VALUE "D".
+*>***************************************************************************
+*> In memory copy of account data
+*>***************************************************************************
     01 AccountData OCCURS 100 TIMES.
        02 AccountName PICTURE IS X(16) VALUE SPACES.
        02 AccountPennies PICTURE IS S9(8) VALUE 0.
   SCREEN SECTION.
+*>***************************************************************************
+*> Account screen: get the account name
+*>***************************************************************************
     01 Account-Login-Screen.
        02 VALUE "PIGGY BANK, Your Bank under your bed!" 
                         BLANK SCREEN                 LINE 1 COL 5.
@@ -104,6 +128,9 @@ DATA DIVISION.
        02 VALUE "ENTER RESPONSE"                     LINE 14 COL 30.
        02 RESPONSE-INPUT                             LINE 14 COL 45
                             PICTURE IS X TO MainAnswer.
+*>***************************************************************************
+*> Transaction screen: enter a transaction
+*>***************************************************************************
     01 Transaction-Screen.       
        02 VALUE "PIGGY BANK, Your Bank under your bed!" 
                                       BLANK SCREEN  LINE 1 COL 5.
@@ -127,12 +154,19 @@ DATA DIVISION.
        02 RESPONSE-INPUT                             LINE 14 COL 45
                             PICTURE IS X TO TransactionAnswer.
 PROCEDURE DIVISION.
+*>***************************************************************************
+*> Main program: Open the accounts file, read in the accounts, then open the
+*> transaction journal, the run the main screen until quit.
+*>***************************************************************************
     PERFORM P100-OpenAccounts
     PERFORM P200-ReadAccounts
     PERFORM P300-OpenTransactions
     PERFORM P400-MainScreen UNTIL FUNCTION UPPER-CASE(MainAnswer) = 'Q'
     STOP Run.
 P100-OpenAccounts.
+*>***************************************************************************
+*> Open the accounts file.  If the file does not exist, create a new one.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P100-OpenAccounts"  UPON STDERR
     OPEN INPUT Accounts
@@ -147,6 +181,9 @@ P100-OpenAccounts.
     END-IF.
 
 P200-ReadAccounts.
+*>***************************************************************************
+*> Read the accounts into memory.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P200-ReadAccounts" UPON STDERR
     PERFORM WITH TEST BEFORE UNTIL AccountsStatus = '10'
@@ -163,6 +200,9 @@ P200-ReadAccounts.
     CLOSE Accounts.
     
 P300-OpenTransactions.
+*>***************************************************************************
+*> Open the transaction journal, creating it if needed.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P300-OpenTransactions" UPON STDERR
     OPEN EXTEND Transactions
@@ -175,6 +215,11 @@ P300-OpenTransactions.
     END-IF.
     
 P400-MainScreen.
+*>***************************************************************************
+*> Display the main screen.  If the account name is new, create a new account
+*> with a balance of 0 pennies.  In either case, run the transaction screen
+*> until quit.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P400-MainScreen" UPON STDERR
     MOVE SPACES TO CurrentAccountName
@@ -215,6 +260,9 @@ P400-MainScreen.
     PERFORM P600-ReWriteAccounts.
     
 P500-TransactionScreen.
+*>***************************************************************************
+*> Run the transaction screen until quit.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P500-TransactionScreen" UPON STDERR
     
@@ -245,6 +293,9 @@ P500-TransactionScreen.
     END-IF.
     
 P600-ReWriteAccounts.
+*>***************************************************************************
+*> Rewrite the account data to the accounts file.
+*>***************************************************************************
 
 >>D    DISPLAY "*** P600-ReWriteAccounts" UPON STDERR
     CLOSE Transactions
