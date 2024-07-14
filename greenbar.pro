@@ -8,7 +8,7 @@
 %  Author        : $Author$
 %  Created By    : Robert Heller
 %  Created       : Sat Jul 13 15:32:17 2024
-%  Last Modified : <240713.1708>
+%  Last Modified : <240713.2158>
 %
 %  Description	
 %
@@ -55,10 +55,10 @@ EndDocumentation
  gsave 
    x v get 3.904048 add sx cw mul add y v get bfs  sub bfs .3 mul add 
    newpath moveto currentpoint
-   sw 0 rlineto 0 bfs 3 mul rlineto sw neg 0 rlineto closepath 0 .75 0 setrgbcolor fill
+   sw 0 rlineto 0 bfs 3 mul rlineto sw neg 0 rlineto closepath 0.56470 .93333 0.56470 setrgbcolor fill
    9 {
    bfs 6 mul sub newpath moveto currentpoint
-   sw 0 rlineto 0 bfs 3 mul rlineto sw neg 0 rlineto closepath 0 .75 0 setrgbcolor fill} repeat
+   sw 0 rlineto 0 bfs 3 mul rlineto sw neg 0 rlineto closepath 0.56470 .93333 0.56470 setrgbcolor fill} repeat
    pop pop
   grestore
 } bind def
